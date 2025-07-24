@@ -314,7 +314,7 @@ alias ez='exec zsh'  # Restart zsh
 
 # Config management
 alias zr='v ~/.zshrc && ez'  # Edit and reload zsh config
-alias sr='source ~/.zshrc'   # Just reload without editing
+alias sz='source ~/.zshrc'   # Just reload without editing
 
 # Project navigation
 alias proj='cd ~/Projects'
