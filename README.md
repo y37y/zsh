@@ -76,7 +76,7 @@ gcb         # git checkout -b (create new branch)
 gst         # git status -sb
 gp          # git push
 gpl         # git pull
-gm          # git commit -am
+gcmt          # git commit -am
 glog        # pretty git log with graph
 glog1       # git log --oneline -10
 ```
