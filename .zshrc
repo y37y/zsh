@@ -218,7 +218,7 @@ alias gf='git push forgejo'
 alias gpf='git push origin && git push forgejo'
 alias gff='git fetch forgejo'
 alias gc='git clone'
-alias gm='git commit -am'
+alias gcmt='git commit -am'
 alias gch='git checkout'
 alias gco='git checkout'
 alias gcb='git checkout -b'
@@ -315,6 +315,7 @@ alias ez='exec zsh'  # Restart zsh
 # Config management
 alias zr='v ~/.zshrc && ez'  # Edit and reload zsh config
 alias sz='source ~/.zshrc'   # Just reload without editing
+alias zp='cp ~/.zshrc ~/Projects/zsh/.zshrc'     # Sync home to repo
 
 # Project navigation
 alias proj='cd ~/Projects'
