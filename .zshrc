@@ -54,7 +54,6 @@ zinit wait lucid for \
 # Additional useful plugins
 zinit wait lucid for \
     OMZL::git.zsh \
-    OMZP::git \
     OMZP::extract \
     agkozak/zsh-z
 
@@ -212,17 +211,16 @@ command -v fd >/dev/null && alias find='fd'
 # Git aliases (your extensive git abbreviations)
 alias g='git'
 alias ga='git add'
+alias gaa='git add --all'
 alias gb='git branch'
 alias gp='git push'
-alias gf='git push forgejo'
-alias gpf='git push origin && git push forgejo'
-alias gff='git fetch forgejo'
 alias gc='git clone'
-alias gcmt='git commit -am'
+alias gm='git commit -am'
 alias gch='git checkout'
 alias gco='git checkout'
 alias gcb='git checkout -b'
 alias gst='git status -sb'
+alias gstsh='git stash'
 alias gpl='git pull'
 alias gps='git pull --recurse-submodules'
 alias gfe='git fetch'
