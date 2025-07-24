@@ -1,0 +1,28 @@
+# Personal/Private configurations
+.zshrc.local
+.zshrc.private
+.zshrc.work
+
+# SSH configurations (never commit SSH configs with key paths)
+ssh_config_private
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
