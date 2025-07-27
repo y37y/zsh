@@ -382,7 +382,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux-specific networking
     alias localip='hostname -I | awk "{print \$1}"'  # Local IP
     alias ips='ip addr show | grep "inet " | grep -v 127.0.0.1'
-    alias ipall='ip addr show'
+    alias ipa='ip addr show'
     alias iproute='ip route show'
     alias ports='ss -tuln | grep LISTEN'   # Open ports
     alias portsx='sudo ss -tulpn'          # Open ports with process info
@@ -394,7 +394,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS-specific networking
     alias localip='ipconfig getifaddr en0'  # Local IP (WiFi)
     alias ips='ifconfig | grep "inet " | grep -v 127.0.0.1'
-    alias ipall='ifconfig'
+    alias ipa='ifconfig'
     alias iproute='netstat -rn'
     alias ports='netstat -an | grep LISTEN'
     alias portsx='sudo lsof -i -P | grep LISTEN'
