@@ -126,15 +126,15 @@ fi
 # Set Homebrew analytics preference if brew is available
 command -v brew >/dev/null && export HOMEBREW_NO_ANALYTICS=1
 
-# Modern tools (loaded with zinit turbo mode - only if installed)
+# Modern tools - improved with better error handling and options
 zinit wait lucid for \
-    atinit"command -v zoxide >/dev/null && eval \"\$(zoxide init zsh)\"" \
+    atinit"command -v zoxide >/dev/null && eval \"\$(zoxide init zsh --cmd cd)\"" \
         z-shell/null \
-    atinit"command -v fzf >/dev/null && eval \"\$(fzf --zsh)\"" \
+    atinit"command -v fzf >/dev/null && eval \"\$(fzf --zsh 2>/dev/null || echo '')\"" \
         z-shell/null \
     atinit"command -v direnv >/dev/null && eval \"\$(direnv hook zsh)\"" \
         z-shell/null \
-    atinit"command -v atuin >/dev/null && eval \"\$(atuin init zsh)\"" \
+    atinit"command -v atuin >/dev/null && eval \"\$(atuin init zsh --disable-up-arrow)\"" \
         z-shell/null \
     atinit"command -v fnm >/dev/null && eval \"\$(fnm env --use-on-cd)\"" \
         z-shell/null
@@ -172,7 +172,7 @@ if [[ -n "$SSH_AUTH_SOCK" ]] && ! ssh-add -l >/dev/null 2>&1; then
 fi
 
 # ============================================================================
-# Aliases (converted from your fish abbreviations)
+# Cross-platform tool aliases (improved to handle different package names)
 # ============================================================================
 
 # Navigation
@@ -191,22 +191,37 @@ alias mkdir='mkdir -p'
 alias m='mkdir -p'
 alias cx='chmod +x'
 
-# Modern replacements
+# Modern replacements - handle different tool names across systems
 if command -v eza >/dev/null; then
     alias ls='eza --icons --group-directories-first'
     alias ll='eza -l --group-directories-first --icons --color=auto -h'
-    alias la='ls -al'  # Keep traditional ls -al as requested
+    alias la='eza -la --group-directories-first --icons --color=auto -h'
     alias l='eza --group-directories-first --icons --color=auto'
     alias lt='eza --tree --level=2 --long --icons --git'
 else
     alias ll='ls -lh'
-    alias la='ls -al'  # Traditional ls -al
+    alias la='ls -alh'
     alias l='ls --color=auto'
 fi
 
-command -v bat >/dev/null && alias cat='bat --style=plain --paging=never'
+# Handle bat/batcat naming differences
+if command -v bat >/dev/null; then
+    alias cat='bat --style=plain --paging=never'
+elif command -v batcat >/dev/null; then
+    alias cat='batcat --style=plain --paging=never'
+    alias bat='batcat'
+fi
+
+# Handle fd/fdfind naming differences
+if command -v fd >/dev/null; then
+    alias find='fd'
+elif command -v fdfind >/dev/null; then
+    alias find='fdfind'
+    alias fd='fdfind'
+fi
+
+# Handle ripgrep
 command -v rg >/dev/null && alias grep='rg'
-command -v fd >/dev/null && alias find='fd'
 
 # Git aliases (your extensive git abbreviations)
 alias g='git'
@@ -252,18 +267,14 @@ alias df='df -h'
 alias du='du -h'
 alias ping='ping -c 4'
 
-# Platform-specific aliases
+# Platform-specific system aliases (non-networking)
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux-specific
+    # Linux-specific system commands
     alias free='free -h'
-    alias ports='netstat -tulpn | grep LISTEN'
-    alias ips='ip addr show | grep "inet "'
-    alias flushdns='sudo systemd-resolve --flush-caches'
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS-specific  
-    alias ports='netstat -an | grep LISTEN'
-    alias ips='ifconfig | grep "inet "'
-    alias flushdns='sudo dscacheutil -flushcache'
+    # macOS-specific system commands  
+    # (add macOS-specific system aliases here if needed)
+    :  # placeholder - no specific aliases needed currently
 fi
 
 alias pg='ping google.com'
@@ -274,9 +285,9 @@ alias bp='brew -v update; brew upgrade --force-bottle; brew upgrade; brew cleanu
 
 # Platform-specific package updates
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux - comprehensive system update
+    # Linux - comprehensive system update (prioritizing Homebrew)
     alias ai='sudo apt install'
-    alias up='sudo apt update && sudo apt upgrade -y && brew update && brew upgrade && rustup update'
+    alias up='brew update && brew upgrade && sudo apt update && sudo apt upgrade -y && rustup update'
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS - brew and system updates
     alias up='brew update && brew upgrade && brew cleanup && softwareupdate --install --recommended'
@@ -352,11 +363,74 @@ alias where='which'
 alias disks='df -P -kHl'
 alias yz='yazi'
 
-# Network and system
+# Network and system - Enhanced networking aliases
 alias ts='tailscale status'
 alias tai='tailscale'
 alias zs='sudo zerotier-cli status'
 alias zt='sudo zerotier-cli'
+
+# ============================================================================
+# Enhanced Networking Aliases
+# ============================================================================
+
+# Basic network info
+alias myip='curl -s ipinfo.io/ip'          # External IP
+alias myipv='curl -s ipinfo.io'            # External IP with location info
+
+# Platform-specific IP and networking commands
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux-specific networking
+    alias localip='hostname -I | awk "{print \$1}"'  # Local IP
+    alias ips='ip addr show | grep "inet " | grep -v 127.0.0.1'
+    alias ipall='ip addr show'
+    alias iproute='ip route show'
+    alias ports='ss -tuln | grep LISTEN'   # Open ports
+    alias portsx='sudo ss -tulpn'          # Open ports with process info
+    alias flushdns='sudo systemd-resolve --flush-caches && echo "DNS cache flushed"'
+    alias dnsinfo='systemd-resolve --status'
+    alias netrestart='sudo systemctl restart NetworkManager'
+    
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS-specific networking
+    alias localip='ipconfig getifaddr en0'  # Local IP (WiFi)
+    alias ips='ifconfig | grep "inet " | grep -v 127.0.0.1'
+    alias ipall='ifconfig'
+    alias iproute='netstat -rn'
+    alias ports='netstat -an | grep LISTEN'
+    alias portsx='sudo lsof -i -P | grep LISTEN'
+    alias flushdns='sudo dscacheutil -flushcache && echo "DNS cache flushed"'
+    alias dnsinfo='scutil --dns'
+    alias netrestart='sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder'
+fi
+
+# DNS queries and testing
+alias dig8='dig @8.8.8.8'                 # Query Google DNS
+alias dig1='dig @1.1.1.1'                 # Query Cloudflare DNS
+alias dnstest='dig google.com @8.8.8.8 && dig google.com @1.1.1.1'
+
+# Enhanced connectivity testing
+alias p1='ping 1.1.1.1'
+alias p8='ping 8.8.8.8'
+alias pc='ping cloudflare.com'
+alias pingt='ping -c 4'                   # Ping with 4 packets
+
+# Port and service testing
+alias portcheck='nc -zv'                  # Check if port is open: portcheck host port
+alias listening='sudo lsof -i -P | grep LISTEN'  # Show listening ports
+
+# HTTP testing
+alias header='curl -I'                    # Get HTTP headers
+alias httpcode='curl -s -o /dev/null -w "%{http_code}"'  # Get just HTTP code
+
+# Speed and performance testing
+alias speedtest='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3'
+alias checknet='ping -c 1 8.8.8.8 >/dev/null 2>&1 && echo "Internet: ✓" || echo "Internet: ✗"'
+
+# Simple web server
+alias serve='python3 -m http.server 8000'  # Simple HTTP server
+
+# SSL/Certificate testing
+alias sslcheck='openssl s_client -connect'  # Usage: sslcheck google.com:443
 
 # Host file management
 alias ch='cat /etc/hosts'
@@ -367,8 +441,6 @@ alias vc='nvim ~/.ssh/config'
 # ============================================================================
 # Functions (optional - remove if you don't want them)
 # ============================================================================
-
-# No functions needed here since you have aliases for .. etc.
 
 # Magic enter - runs smart commands on empty Enter press
 # Remove this entire section if you don't want this feature
@@ -405,6 +477,13 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 
 # ============================================================================
+# Performance optimizations
+# ============================================================================
+
+# Disable some slow features for better performance
+skip_global_compinit=1
+
+# ============================================================================
 # Load local customizations
 # ============================================================================
 
@@ -413,3 +492,12 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 
 # Load work-specific config if it exists  
 [[ -f ~/.zshrc.work ]] && source ~/.zshrc.work
+
+# ============================================================================
+# Platform-specific final adjustments
+# ============================================================================
+
+# Ensure ~/.local/bin is in PATH (for manual installs and symlinks)
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
