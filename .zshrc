@@ -134,7 +134,7 @@ zinit wait lucid for \
         z-shell/null \
     atinit"command -v direnv >/dev/null && eval \"\$(direnv hook zsh)\"" \
         z-shell/null \
-    atinit"command -v atuin >/dev/null && eval \"\$(atuin init zsh --disable-up-arrow)\"" \
+    atinit"command -v atuin >/dev/null && eval \"\$(atuin init zsh)\"" \
         z-shell/null \
     atinit"command -v fnm >/dev/null && eval \"\$(fnm env --use-on-cd)\"" \
         z-shell/null
