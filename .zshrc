@@ -157,20 +157,6 @@ if [[ -z "$SSH_AUTH_SOCK" ]]; then
     fi
 fi
 
-# Auto-load SSH keys (only once per session)
-# This will try to load common key names - customize in ~/.zshrc.local
-if [[ -n "$SSH_AUTH_SOCK" ]] && ! ssh-add -l >/dev/null 2>&1; then
-    if [[ -z "$SSH_KEYS_LOADED" ]]; then
-        # Try to load common SSH key names
-        for key in ~/.ssh/id_ed25519 ~/.ssh/id_rsa; do
-            if [[ -f "$key" ]]; then
-                ssh-add --apple-use-keychain "$key" 2>/dev/null || ssh-add "$key" 2>/dev/null
-            fi
-        done
-        export SSH_KEYS_LOADED=1
-    fi
-fi
-
 # ============================================================================
 # Cross-platform tool aliases (improved to handle different package names)
 # ============================================================================
