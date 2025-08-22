@@ -61,6 +61,15 @@ brew install direnv fnm lazygit gitleaks
 brew install nmap mtr
 ```
 
+## 🍎 macOS Specific Setup
+
+### Terminal Shell Configuration
+macOS Terminal opens login shells by default, which only read `.zprofile` (not `.zshrc`). After installation, create a `.zprofile` file to source your `.zshrc`:
+
+```bash
+echo 'source ~/.zshrc' >> ~/.zprofile
+```
+
 ## 🎯 Key Aliases & Shortcuts
 
 ### Navigation
