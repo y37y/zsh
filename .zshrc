@@ -177,6 +177,15 @@ alias mkdir='mkdir -p'
 alias m='mkdir -p'
 alias cx='chmod +x'
 
+# Archive operations
+alias untar='tar -xvf'           # Extract tar
+alias untargz='tar -xzf'         # Extract tar.gz
+alias untarbz='tar -xjf'         # Extract tar.bz2
+alias tarit='tar -czf'           # Create tar.gz: tarup archive.tar.gz folder/
+alias tarls='tar -tzf'           # List contents of tar.gz
+alias uz='unzip'                 # Unzip
+alias zipit='zip -r'             # Create zip: zipit archive.zip folder/
+
 # Modern replacements - handle different tool names across systems
 if command -v eza >/dev/null; then
     alias ls='eza --icons --group-directories-first'
