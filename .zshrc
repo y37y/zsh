@@ -11,6 +11,21 @@ HISTFILE=~/.zsh_history
 setopt APPEND_HISTORY SHARE_HISTORY HIST_IGNORE_DUPS HIST_REDUCE_BLANKS
 setopt HIST_VERIFY HIST_EXPIRE_DUPS_FIRST
 
+# --- Ensure user bins are on PATH early (needed for atuin, etc.) ---
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+
+export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
+export RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
+# Common local bins first so `command -v` works during init
+for P in "$HOME/.atuin/bin" "$HOME/.local/bin" "$CARGO_HOME/bin" "$PNPM_HOME"; do
+  case ":$PATH:" in *":$P:"*) ;; *) PATH="$P:$PATH" ;; esac
+done
+export PATH
+
 # Basic completion
 autoload -Uz compinit
 compinit
@@ -19,9 +34,11 @@ compinit
 bindkey -e  # Emacs style (Ctrl+A/E for line start/end) - RECOMMENDED
 # bindkey -vi  # Vim style (uncomment if you prefer vim keybindings)
 
-# Atuin will handle history search if installed
-if ! command -v atuin >/dev/null; then
-    bindkey '^R' history-incremental-search-backward
+# Atuin will handle history search if installed (direct init; no zinit race)
+if command -v atuin >/dev/null; then
+  eval "$(atuin init zsh)"
+else
+  bindkey '^R' history-incremental-search-backward
 fi
 
 # ============================================================================
@@ -31,7 +48,7 @@ fi
 # Install zinit if not present
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [[ ! -d "$ZINIT_HOME" ]]; then
-    mkdir -p "$(dirname $ZINIT_HOME)"
+    mkdir -p "$(dirname "$ZINIT_HOME")"
     git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 fi
 
@@ -67,15 +84,6 @@ zinit light starship/starship
 # Environment Variables (from your env.fish)
 # ============================================================================
 
-# XDG Base Directories
-export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_STATE_HOME="$HOME/.local/state"
-export XDG_CACHE_HOME="$HOME/.cache"
-
-# Create XDG directories if they don't exist
-mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
-
 # Editor and pager
 export EDITOR="nvim"
 export VISUAL="nvim"
@@ -97,10 +105,13 @@ export LESS_TERMCAP_se=$'\e[0m'        # reset reverse video
 export LESS_TERMCAP_us=$'\e[1;35m'     # begin underline
 export LESS_TERMCAP_ue=$'\e[0m'        # reset underline
 
-# XDG compliance
+# XDG compliance extras
 export GNUPGHOME="$XDG_DATA_HOME/gnupg"
 export LESSHISTFILE="$XDG_DATA_HOME/lesshst"
 export SQLITE_HISTORY="$XDG_DATA_HOME/sqlite_history"
+
+# Create XDG directories if they don't exist
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
 
 # ============================================================================
 # Tool Initializations (cross-platform)
@@ -110,10 +121,8 @@ export SQLITE_HISTORY="$XDG_DATA_HOME/sqlite_history"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
     if [[ -f "/opt/homebrew/bin/brew" ]]; then
-        # Apple Silicon
         eval "$(/opt/homebrew/bin/brew shellenv)"
     elif [[ -f "/usr/local/bin/brew" ]]; then
-        # Intel Mac
         eval "$(/usr/local/bin/brew shellenv)"
     fi
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -126,15 +135,13 @@ fi
 # Set Homebrew analytics preference if brew is available
 command -v brew >/dev/null && export HOMEBREW_NO_ANALYTICS=1
 
-# Modern tools - improved with better error handling and options
+# Modern tools (init directly where applicable; removed Atuin here)
 zinit wait lucid for \
     atinit"command -v zoxide >/dev/null && eval \"\$(zoxide init zsh --cmd cd)\"" \
         z-shell/null \
     atinit"command -v fzf >/dev/null && eval \"\$(fzf --zsh 2>/dev/null || echo '')\"" \
         z-shell/null \
     atinit"command -v direnv >/dev/null && eval \"\$(direnv hook zsh)\"" \
-        z-shell/null \
-    atinit"command -v atuin >/dev/null && eval \"\$(atuin init zsh)\"" \
         z-shell/null \
     atinit"command -v fnm >/dev/null && eval \"\$(fnm env --use-on-cd)\"" \
         z-shell/null
@@ -149,7 +156,7 @@ if [[ -z "$SSH_AUTH_SOCK" ]]; then
     if [[ -f ~/.ssh/agent.env ]]; then
         source ~/.ssh/agent.env >/dev/null
     fi
-    
+
     # Start agent if not running
     if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
         ssh-agent > ~/.ssh/agent.env
@@ -157,8 +164,20 @@ if [[ -z "$SSH_AUTH_SOCK" ]]; then
     fi
 fi
 
+# Auto-load SSH keys (only once per session)
+if [[ -n "$SSH_AUTH_SOCK" ]] && ! ssh-add -l >/dev/null 2>&1; then
+    if [[ -z "$SSH_KEYS_LOADED" ]]; then
+        for key in ~/.ssh/id_ed25519 ~/.ssh/id_rsa; do
+            if [[ -f "$key" ]]; then
+                ssh-add --apple-use-keychain "$key" 2>/dev/null || ssh-add "$key" 2>/dev/null
+            fi
+        done
+        export SSH_KEYS_LOADED=1
+    fi
+fi
+
 # ============================================================================
-# Cross-platform tool aliases (improved to handle different package names)
+# Cross-platform tool aliases
 # ============================================================================
 
 # Navigation
@@ -168,7 +187,7 @@ alias ....='cd ../../..'
 alias h='cd ~'
 alias p='pwd'
 
-# File operations  
+# File operations
 alias mv='mv -v'
 alias rm='rm -v -i'
 alias rmf='rm -v -i -rf'
@@ -177,16 +196,7 @@ alias mkdir='mkdir -p'
 alias m='mkdir -p'
 alias cx='chmod +x'
 
-# Archive operations
-alias untar='tar -xvf'           # Extract tar
-alias untargz='tar -xzf'         # Extract tar.gz
-alias untarbz='tar -xjf'         # Extract tar.bz2
-alias tarit='tar -czf'           # Create tar.gz: tarup archive.tar.gz folder/
-alias tarls='tar -tzf'           # List contents of tar.gz
-alias uz='unzip'                 # Unzip
-alias zipit='zip -r'             # Create zip: zipit archive.zip folder/
-
-# Modern replacements - handle different tool names across systems
+# Modern replacements
 if command -v eza >/dev/null; then
     alias ls='eza --icons --group-directories-first'
     alias ll='eza -l --group-directories-first --icons --color=auto -h'
@@ -199,15 +209,15 @@ else
     alias l='ls --color=auto'
 fi
 
-# Handle bat/batcat naming differences
-if command -v bat >/dev/null; then
+# bat/batcat
+if command -v bat >/dev/null 2>&1; then
     alias cat='bat --style=plain --paging=never'
 elif command -v batcat >/dev/null; then
     alias cat='batcat --style=plain --paging=never'
     alias bat='batcat'
 fi
 
-# Handle fd/fdfind naming differences
+# fd/fdfind
 if command -v fd >/dev/null; then
     alias find='fd'
 elif command -v fdfind >/dev/null; then
@@ -215,10 +225,10 @@ elif command -v fdfind >/dev/null; then
     alias fd='fdfind'
 fi
 
-# Handle ripgrep
+# ripgrep
 command -v rg >/dev/null && alias grep='rg'
 
-# Git aliases (your extensive git abbreviations)
+# Git aliases
 alias g='git'
 alias ga='git add'
 alias gaa='git add --all'
@@ -257,19 +267,15 @@ alias sg='ssh-keygen -t ed25519 -C'
 alias ssha='eval $(ssh-agent)'
 alias ssht='ssh -T git@github.com'
 
-# System management (cross-platform)
+# System management
 alias df='df -h'
 alias du='du -h'
 alias ping='ping -c 4'
 
-# Platform-specific system aliases (non-networking)
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux-specific system commands
     alias free='free -h'
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS-specific system commands  
-    # (add macOS-specific system aliases here if needed)
-    :  # placeholder - no specific aliases needed currently
+    :  # placeholder
 fi
 
 alias pg='ping google.com'
@@ -278,13 +284,10 @@ alias pg='ping google.com'
 alias b='brew'
 alias bp='brew -v update; brew upgrade --force-bottle; brew upgrade; brew cleanup; brew doctor'
 
-# Platform-specific package updates
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux - comprehensive system update (prioritizing Homebrew)
     alias ai='sudo apt install'
     alias up='brew update && brew upgrade && sudo apt update && sudo apt upgrade -y && rustup update'
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS - brew and system updates
     alias up='brew update && brew upgrade && brew cleanup && softwareupdate --install --recommended'
 fi
 alias ni='npm install'
@@ -309,17 +312,17 @@ alias tn='tmux new -s $(basename $PWD)'
 # Editor and tools
 alias v='nvim'
 alias n='nvim'
-alias va='nvim ~/.zshrc'  # Edit zsh config instead of fish
+alias va='nvim ~/.zshrc'
 alias c='cat'
 alias tl='tldr'
 alias cl='clear'
 alias e='exit'
-alias ez='exec zsh'  # Restart zsh
+alias ez='exec zsh'
 
 # Config management
-alias zr='v ~/.zshrc && ez'  # Edit and reload zsh config
-alias sz='source ~/.zshrc'   # Just reload without editing
-alias zp='cp ~/.zshrc ~/Projects/zsh/.zshrc'     # Sync home to repo
+alias zr='v ~/.zshrc && ez'
+alias sz='source ~/.zshrc'
+alias zp='cp ~/.zshrc ~/Projects/zsh/.zshrc'
 
 # Project navigation
 alias proj='cd ~/Projects'
@@ -330,7 +333,6 @@ alias ff='fd --type f --hidden --exclude .git --exclude node_modules'
 alias fp='fd --type f --hidden | fzf --preview "bat --style=numbers --color=always {}"'
 alias fv='fd --type f --hidden | fzf | xargs -r nvim'
 alias fcd='fd --type d --hidden | fzf | xargs -r cd'
-# Note: fh removed since atuin handles history search
 
 # Chezmoi
 alias che='chezmoi'
@@ -369,25 +371,21 @@ alias zt='sudo zerotier-cli'
 # ============================================================================
 
 # Basic network info
-alias myip='curl -s ipinfo.io/ip'          # External IP
-alias myipv='curl -s ipinfo.io'            # External IP with location info
+alias myip='curl -s ipinfo.io/ip'
+alias myipv='curl -s ipinfo.io'
 
-# Platform-specific IP and networking commands
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux-specific networking
-    alias localip='hostname -I | awk "{print \$1}"'  # Local IP
+    alias localip='hostname -I | awk "{print \$1}"'
     alias ips='ip addr show | grep "inet " | grep -v 127.0.0.1'
     alias ipa='ip addr show'
     alias iproute='ip route show'
-    alias ports='ss -tuln | grep LISTEN'   # Open ports
-    alias portsx='sudo ss -tulpn'          # Open ports with process info
+    alias ports='ss -tuln | grep LISTEN'
+    alias portsx='sudo ss -tulpn'
     alias flushdns='sudo systemd-resolve --flush-caches && echo "DNS cache flushed"'
     alias dnsinfo='systemd-resolve --status'
     alias netrestart='sudo systemctl restart NetworkManager'
-    
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS-specific networking
-    alias localip='ipconfig getifaddr en0'  # Local IP (WiFi)
+    alias localip='ipconfig getifaddr en0'
     alias ips='ifconfig | grep "inet " | grep -v 127.0.0.1'
     alias ipa='ifconfig'
     alias iproute='netstat -rn'
@@ -399,33 +397,33 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # DNS queries and testing
-alias dig8='dig @8.8.8.8'                 # Query Google DNS
-alias dig1='dig @1.1.1.1'                 # Query Cloudflare DNS
+alias dig8='dig @8.8.8.8'
+alias dig1='dig @1.1.1.1'
 alias dnstest='dig google.com @8.8.8.8 && dig google.com @1.1.1.1'
 
 # Enhanced connectivity testing
 alias p1='ping 1.1.1.1'
 alias p8='ping 8.8.8.8'
 alias pc='ping cloudflare.com'
-alias pingt='ping -c 4'                   # Ping with 4 packets
+alias pingt='ping -c 4'
 
 # Port and service testing
-alias portcheck='nc -zv'                  # Check if port is open: portcheck host port
-alias listening='sudo lsof -i -P | grep LISTEN'  # Show listening ports
+alias portcheck='nc -zv'
+alias listening='sudo lsof -i -P | grep LISTEN'
 
 # HTTP testing
-alias header='curl -I'                    # Get HTTP headers
-alias httpcode='curl -s -o /dev/null -w "%{http_code}"'  # Get just HTTP code
+alias header='curl -I'
+alias httpcode='curl -s -o /dev/null -w "%{http_code}"'
 
 # Speed and performance testing
 alias speedtest='curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3'
 alias checknet='ping -c 1 8.8.8.8 >/dev/null 2>&1 && echo "Internet: ✓" || echo "Internet: ✗"'
 
 # Simple web server
-alias serve='python3 -m http.server 8000'  # Simple HTTP server
+alias serve='python3 -m http.server 8000'
 
 # SSL/Certificate testing
-alias sslcheck='openssl s_client -connect'  # Usage: sslcheck google.com:443
+alias sslcheck='openssl s_client -connect'
 
 # Host file management
 alias ch='cat /etc/hosts'
@@ -434,11 +432,10 @@ alias cc='cat ~/.ssh/config'
 alias vc='nvim ~/.ssh/config'
 
 # ============================================================================
-# Functions (optional - remove if you don't want them)
+# Functions
 # ============================================================================
 
 # Magic enter - runs smart commands on empty Enter press
-# Remove this entire section if you don't want this feature
 magic-enter() {
     if [[ -z $BUFFER ]]; then
         if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -453,7 +450,6 @@ magic-enter() {
 }
 zle -N magic-enter
 bindkey '^M' magic-enter
-# End of magic-enter (comment out lines above if you don't want this)
 
 # ============================================================================
 # Zinit Completions and Theme
@@ -463,7 +459,7 @@ bindkey '^M' magic-enter
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
-# Advanced completion settings  
+# Advanced completion settings
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*:git-checkout:*' sort false
@@ -482,17 +478,16 @@ skip_global_compinit=1
 # Load local customizations
 # ============================================================================
 
-# Load machine-specific config if it exists
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
-
-# Load work-specific config if it exists  
-[[ -f ~/.zshrc.work ]] && source ~/.zshrc.work
+[[ -f ~/.zshrc.work  ]] && source ~/.zshrc.work
 
 # ============================================================================
 # Platform-specific final adjustments
 # ============================================================================
 
-# Ensure ~/.local/bin is in PATH (for manual installs and symlinks)
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    export PATH="$HOME/.local/bin:$PATH"
-fi
+# (Already ensured early) Keep ~/.local/bin in PATH even if modified later
+for P in "$HOME/.local/bin" ; do
+  case ":$PATH:" in *":$P:"*) ;; *) PATH="$P:$PATH" ;; esac
+done
+export PATH
+
