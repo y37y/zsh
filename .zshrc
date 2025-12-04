@@ -135,16 +135,19 @@ fi
 # Set Homebrew analytics preference if brew is available
 command -v brew >/dev/null && export HOMEBREW_NO_ANALYTICS=1
 
-# Modern tools (init directly where applicable; removed Atuin here)
+# Modern tools (init via zinit where applicable; Atuin initialized earlier)
 zinit wait lucid for \
     atinit"command -v zoxide >/dev/null && eval \"\$(zoxide init zsh --cmd cd)\"" \
         z-shell/null \
     atinit"command -v fzf >/dev/null && eval \"\$(fzf --zsh 2>/dev/null || echo '')\"" \
         z-shell/null \
     atinit"command -v direnv >/dev/null && eval \"\$(direnv hook zsh)\"" \
-        z-shell/null \
-    atinit"command -v fnm >/dev/null && eval \"\$(fnm env --use-on-cd)\"" \
         z-shell/null
+
+# fnm: ensure Node/npm are available on any shell (macOS + Linux)
+if command -v fnm >/dev/null 2>&1; then
+  eval "$(fnm env --use-on-cd)"
+fi
 
 # ============================================================================
 # SSH Agent Setup - Generic and Secure
