@@ -1,30 +1,45 @@
 add_newline = false
-# A minimal left prompt
-format = """$username@$hostname $python$directory$character"""
 palette = "catppuccin_mocha"
-# move the rest of the prompt to the right
-right_format = """$all"""
-command_timeout = 100000
+command_timeout = 5000 # Wait up to 5s (prevents freezing, but allows slow repos)
+
+# LEFT SIDE: Context
+format = """$username$hostname$directory$python$character"""
+
+# RIGHT SIDE: Meta info
+right_format = """$git_branch$git_status$aws$golang$cmd_duration$status"""
 
 [username]
-show_always = true  # Always show username
-format = '[$user]($style)'
-style_user = "green"  # Customize the style (change to your preference)
+show_always = true
+style_user = "green bold"
+style_root = "red bold"
+format = '[$user]($style)@'
 
-# Show hostname in the prompt
 [hostname]
-ssh_only = false  # Show hostname even when not in SSH
-format = "[$hostname]($style)"  # Format for the hostname
-style = "yellow"  # Customize the style (change to your preference)
+ssh_only = false
+format = "[$hostname]($style) "
+style = "yellow bold"
+
+[directory]
+truncation_length = 3
+truncation_symbol = "…/"
+style = "blue"
+read_only = " 🔒"
 
 [directory.substitutions]
 '~/tests/starship-custom' = 'work-project'
 
+[character]
+# Restored your preferred arrow symbol
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vicmd_symbol = "[V](bold green)"
+
 [git_branch]
-format =  '[$symbol$branch(:$remote_branch)]($style)'
+format = '[$symbol$branch(:$remote_branch)]($style)'
+symbol = " "
 
 [git_status]
-format = "[( $ahead_behind$stashed)]($style)"
+format = '([ $ahead_behind$stashed]($style))'
 style = "cyan"
 stashed = "≡"
 ahead = "⇡${count}"
@@ -33,49 +48,33 @@ diverged = "⇕⇡${ahead_count}⇣${behind_count}"
 
 [aws]
 format = '[$symbol(profile: "$profile" )(\(region: $region\) )]($style)'
-disabled = false
 style = 'bold blue'
 symbol = " "
 
 [python]
 format = '[(\($virtualenv\) )]($style)'
-style = 'white'
+style = 'white dim'
 
 [golang]
 format = '[ ](bold cyan)'
 
+# Disable K8s and Docker
 [kubernetes]
-symbol = '☸ '
 disabled = true
-detect_files = ['Dockerfile']
-format = '[$symbol$context( \($namespace\))]($style) '
-contexts = [
-  { context_pattern = "arn:aws:eks:us-west-2:577926974532:cluster/zd-pvc-omer", style = "green", context_alias = "omerxx", symbol = " " },
-]
-
 [docker_context]
 disabled = true
 
-[shell]
-fish_indicator = ' 🐟'  # 󰈺 🐟 🐠
-powershell_indicator = ' _'
-pwsh_indicator = ' _'
-zsh_indicator = '󠀥 %'
-style = 'cyan bold'
-disabled = false
-
 [cmd_duration]
+min_time = 0 # Show duration ALWAYS, even for fast commands
 format = ' [$duration]($style)'
-
-[line_break]
-disabled = true
+style = "yellow"
 
 [status]
 disabled = false
 pipestatus = true
 format = '[$symbol$int]($style)'
 symbol = '✘'
-pipestatus_format = '\[$pipestatus\]($style)'
+style = "red"
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
