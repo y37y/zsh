@@ -337,13 +337,6 @@ alias fp='fd --type f --hidden | fzf --preview "bat --style=numbers --color=alwa
 alias fv='fd --type f --hidden | fzf | xargs -r nvim'
 alias fcd='fd --type d --hidden | fzf | xargs -r cd'
 
-# Chezmoi
-alias che='chezmoi'
-alias ca='chezmoi apply'
-alias cs='chezmoi status'
-alias cdf='chezmoi diff | bat --paging=always --language=diff'
-alias cad='chezmoi add'
-
 # VPN (AdGuard)
 alias ad='adguardvpn-cli'
 alias ads='adguardvpn-cli status'
@@ -361,7 +354,6 @@ alias pk='pkill -f'
 alias dt='date +%Y-%m-%d.%H:%M:%S'
 alias where='which'
 alias disks='df -P -kHl'
-alias yz='yazi'
 
 # Network and system - Enhanced networking aliases
 alias ts='tailscale status'
