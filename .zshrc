@@ -233,6 +233,10 @@ fi
 # ripgrep
 command -v rg >/dev/null && alias grep='rg'
 
+if command -v gdu-go >/dev/null; then
+    alias gdu='gdu-go'
+fi
+
 # Go aliases
 alias gob='go build'
 alias goc='go clean'
@@ -240,6 +244,19 @@ alias got='go test'
 alias gor='go run'
 alias goi='go install'
 alias gom='go mod tidy'
+
+# Rust / Cargo aliases
+alias cr='cargo run'
+alias cb='cargo build'
+alias ct='cargo test'
+alias ck='cargo check'
+alias cf='cargo fmt'
+alias cy='cargo clippy'
+alias cn='cargo new'
+alias cup='cargo update'
+alias crm='cargo rm'
+alias cad='cargo add'
+alias cw='cargo watch -x run'
 
 # Git aliases
 alias g='git'
