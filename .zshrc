@@ -19,9 +19,11 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 
 export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
 export RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+export GOPATH="${GOPATH:-$HOME/go}"
 export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
+
 # Common local bins first so `command -v` works during init
-for P in "$HOME/.atuin/bin" "$HOME/.local/bin" "$CARGO_HOME/bin" "$PNPM_HOME"; do
+for P in "$HOME/.atuin/bin" "$HOME/.local/bin" "$CARGO_HOME/bin" "$PNPM_HOME" "$GOPATH/bin" "/usr/local/go/bin"; do
   case ":$PATH:" in *":$P:"*) ;; *) PATH="$P:$PATH" ;; esac
 done
 export PATH
@@ -231,6 +233,14 @@ fi
 # ripgrep
 command -v rg >/dev/null && alias grep='rg'
 
+# Go aliases
+alias gob='go build'
+alias goc='go clean'
+alias got='go test'
+alias gor='go run'
+alias goi='go install'
+alias gom='go mod tidy'
+
 # Git aliases
 alias g='git'
 alias ga='git add'
@@ -274,14 +284,13 @@ alias ssht='ssh -T git@github.com'
 alias df='df -h'
 alias du='du -h'
 alias ping='ping -c 4'
+alias pg='ping google.com'
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     alias free='free -h'
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     :  # placeholder
 fi
-
-alias pg='ping google.com'
 
 # Package management
 alias b='brew'
