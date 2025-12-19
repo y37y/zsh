@@ -330,13 +330,13 @@ alias pd='pnpm dev'
 
 # Tmux
 alias t='tmux'
-alias tt='tmux attach'
-alias tad='tmux attach -d'
+alias ta='tmux attach -t'
+alias tad='tmux attach -d -t'
+alias tn='tmux new-session -s'
 alias tl='tmux list-sessions'
-alias tk='tmux kill-server'
-alias tks='tmux kill-session -t'
-alias tr='tmux source-file ~/.config/tmux/tmux.conf'
-alias tn='tmux new -s $(basename $PWD)'
+alias tksv='tmux kill-server'
+alias tkss='tmux kill-session -t'
+alias tr='tmux source-file ~/.tmux.conf'
 
 # Editor and tools
 alias v='nvim'
