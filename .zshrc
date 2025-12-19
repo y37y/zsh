@@ -381,11 +381,20 @@ alias dt='date +%Y-%m-%d.%H:%M:%S'
 alias where='which'
 alias disks='df -P -kHl'
 
-# Network and system - Enhanced networking aliases
+# Tailscale
 alias ts='tailscale status'
-alias tai='tailscale'
-alias zs='sudo zerotier-cli status'
+alias ti='tailscale ip -4'      # Just the IPv4
+alias tu='tailscale up'
+alias td='tailscale down'
+alias tp='tailscale ping'
+alias tnet='tailscale netcheck' # Check DERP/UDP health
+
+# ZeroTier
 alias zt='sudo zerotier-cli'
+alias zs='sudo zerotier-cli status'
+alias zl='sudo zerotier-cli listnetworks'
+alias zi='sudo zerotier-cli info'
+alias zp='sudo zerotier-cli peers'
 
 # ============================================================================
 # Enhanced Networking Aliases
