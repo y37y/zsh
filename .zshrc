@@ -4,6 +4,8 @@
 # Basic zsh configuration
 # ============================================================================
 
+export SHELL="/bin/zsh"
+
 # History settings
 HISTSIZE=10000
 SAVEHIST=10000
