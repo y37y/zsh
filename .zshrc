@@ -232,6 +232,10 @@ elif command -v fdfind >/dev/null; then
     alias fd='fdfind'
 fi
 
+# tar alias
+alias ut = 'tar -xf'      # extract
+alias ta = 'tar -czf'     # Create tar.gz
+
 # ripgrep
 command -v rg >/dev/null && alias grep='rg'
 
@@ -522,4 +526,3 @@ for P in "$HOME/.local/bin" ; do
   case ":$PATH:" in *":$P:"*) ;; *) PATH="$P:$PATH" ;; esac
 done
 export PATH
-
