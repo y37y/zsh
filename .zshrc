@@ -233,8 +233,8 @@ elif command -v fdfind >/dev/null; then
 fi
 
 # tar alias
-alias ut = 'tar -xf'      # extract
-alias ta = 'tar -czf'     # Create tar.gz
+alias ut='tar -xf'      # extract
+alias ta='tar -czf'     # Create tar.gz
 
 # ripgrep
 command -v rg >/dev/null && alias grep='rg'
