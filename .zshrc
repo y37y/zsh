@@ -337,20 +337,18 @@ alias pd='pnpm dev'
 
 # Tmux
 alias t='tmux'
-alias ta='tmux attach -t'
-alias tad='tmux attach -d -t'
+alias tt='tmux attach -t'
 alias tn='tmux new-session -s'
 alias tl='tmux list-sessions'
 alias tksv='tmux kill-server'
 alias tkss='tmux kill-session -t'
-alias tr='tmux source-file ~/.tmux.conf'
+alias tsr='tmux source-file ~/.tmux.conf'
 
 # Editor and tools
 alias v='nvim'
 alias n='nvim'
 alias va='nvim ~/.zshrc'
 alias c='cat'
-alias tl='tldr'
 alias cl='clear'
 alias e='exit'
 alias ez='exec zsh'
@@ -358,7 +356,6 @@ alias ez='exec zsh'
 # Config management
 alias zr='v ~/.zshrc && ez'
 alias sz='source ~/.zshrc'
-alias zp='cp ~/.zshrc ~/Projects/zsh/.zshrc'
 
 # Project navigation
 alias proj='cd ~/Projects'
@@ -442,7 +439,6 @@ alias dnstest='dig google.com @8.8.8.8 && dig google.com @1.1.1.1'
 alias p1='ping 1.1.1.1'
 alias p8='ping 8.8.8.8'
 alias pc='ping cloudflare.com'
-alias pingt='ping -c 4'
 
 # Port and service testing
 alias portcheck='nc -zv'
