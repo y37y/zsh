@@ -157,29 +157,23 @@ fi
 # SSH Agent Setup - Generic and Secure
 # ============================================================================
 
-# SSH agent initialization (only if no agent running)
-if [[ -z "$SSH_AUTH_SOCK" ]]; then
-    # Check for existing agent
-    if [[ -f ~/.ssh/agent.env ]]; then
-        source ~/.ssh/agent.env >/dev/null
+# SSH agent setup - Linux only (macOS handles this via Keychain/launchd)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if [[ -z "$SSH_AUTH_SOCK" ]]; then
+        [[ -f ~/.ssh/agent.env ]] && source ~/.ssh/agent.env >/dev/null
+        if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
+            ssh-agent > ~/.ssh/agent.env
+            source ~/.ssh/agent.env >/dev/null
+        fi
     fi
 
-    # Start agent if not running
-    if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
-        ssh-agent > ~/.ssh/agent.env
-        source ~/.ssh/agent.env >/dev/null
-    fi
-fi
-
-# Auto-load SSH keys (only once per session)
-if [[ -n "$SSH_AUTH_SOCK" ]] && ! ssh-add -l >/dev/null 2>&1; then
-    if [[ -z "$SSH_KEYS_LOADED" ]]; then
-        for key in ~/.ssh/id_ed25519 ~/.ssh/id_rsa; do
-            if [[ -f "$key" ]]; then
-                ssh-add --apple-use-keychain "$key" 2>/dev/null || ssh-add "$key" 2>/dev/null
-            fi
-        done
-        export SSH_KEYS_LOADED=1
+    if [[ -n "$SSH_AUTH_SOCK" ]] && ! ssh-add -l >/dev/null 2>&1; then
+        [[ -z "$SSH_KEYS_LOADED" ]] && {
+            for key in ~/.ssh/id_ed25519 ~/.ssh/id_rsa; do
+                [[ -f "$key" ]] && ssh-add "$key" 2>/dev/null
+            done
+            export SSH_KEYS_LOADED=1
+        }
     fi
 fi
 
