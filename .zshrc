@@ -505,6 +505,8 @@ skip_global_compinit=1
 # Load local customizations
 # ============================================================================
 
+# ~/.zshrc.local - Machine-specific config (not tracked in git)
+# Examples: CUDA paths, work aliases, private tokens, server-specific vars
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 [[ -f ~/.zshrc.work  ]] && source ~/.zshrc.work
 
@@ -516,4 +518,3 @@ skip_global_compinit=1
 for P in "$HOME/.local/bin" ; do
   case ":$PATH:" in *":$P:"*) ;; *) PATH="$P:$PATH" ;; esac
 done
-export PATH
