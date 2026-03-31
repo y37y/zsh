@@ -331,7 +331,7 @@ alias pd='pnpm dev'
 
 # Tmux
 alias t='tmux'
-alias tt='tmux attach -t'
+alias tt='tmux attach'
 alias tn='tmux new-session -s'
 alias tl='tmux list-sessions'
 alias tksv='tmux kill-server'
