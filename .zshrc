@@ -67,7 +67,7 @@ source "${ZINIT_HOME}/zinit.zsh"
 zinit wait lucid for \
     atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
         zdharma-continuum/fast-syntax-highlighting \
-    atload"!_zsh_autosuggest_start" \
+    atload"!_zsh_autosuggest_start; ZSH_AUTOSUGGEST_MANUAL_REBIND=1; ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20" \
         zsh-users/zsh-autosuggestions \
     blockf \
         zsh-users/zsh-completions
@@ -75,8 +75,7 @@ zinit wait lucid for \
 # Additional useful plugins
 zinit wait lucid for \
     OMZL::git.zsh \
-    OMZP::extract \
-    agkozak/zsh-z
+    OMZP::extract
 
 # Load starship theme
 zinit ice as"command" from"gh-r" \
@@ -141,7 +140,7 @@ command -v brew >/dev/null && export HOMEBREW_NO_ANALYTICS=1
 
 # Modern tools (init via zinit where applicable; Atuin initialized earlier)
 zinit wait lucid for \
-    atinit"command -v zoxide >/dev/null && eval \"\$(zoxide init zsh --cmd cd)\"" \
+    atinit"command -v zoxide >/dev/null && eval \"\$(zoxide init zsh)\"" \
         z-shell/null \
     atinit"command -v fzf >/dev/null && eval \"\$(fzf --zsh 2>/dev/null || echo '')\"" \
         z-shell/null \
@@ -218,11 +217,8 @@ elif command -v batcat >/dev/null; then
     alias bat='batcat'
 fi
 
-# fd/fdfind
-if command -v fd >/dev/null; then
-    alias find='fd'
-elif command -v fdfind >/dev/null; then
-    alias find='fdfind'
+# fd/fdfind (don't override system find - use fd directly)
+if command -v fdfind >/dev/null; then
     alias fd='fdfind'
 fi
 
@@ -230,8 +226,7 @@ fi
 alias ut='tar -xf'      # extract
 alias ta='tar -czf'     # Create tar.gz
 
-# ripgrep
-command -v rg >/dev/null && alias grep='rg'
+# ripgrep (don't override system grep - use rg directly)
 
 if command -v gdu-go >/dev/null; then
     alias gdu='gdu-go'
@@ -267,7 +262,6 @@ alias gp='git push'
 alias gpf='git push forgejo main'
 alias gc='git clone'
 alias gm='git commit -am'
-alias gch='git checkout'
 alias gco='git checkout'
 alias gcb='git checkout -b'
 alias gst='git status -sb'
@@ -293,7 +287,6 @@ alias s='ssh'
 alias sa='ssh-add'
 alias sl='ssh-add -l'
 alias sd='ssh-add -D'
-alias sk='ssh-keygen -t ed25519 -C'
 alias sg='ssh-keygen -t ed25519 -C'
 alias ssha='eval $(ssh-agent)'
 alias ssht='ssh -T git@github.com'
@@ -391,7 +384,7 @@ alias tnet='tailscale netcheck' # Check DERP/UDP health
 alias zt='sudo zerotier-cli'
 alias zs='sudo zerotier-cli status'
 alias zl='sudo zerotier-cli listnetworks'
-alias zi='sudo zerotier-cli info'
+alias zti='sudo zerotier-cli info'
 alias zp='sudo zerotier-cli peers'
 
 # ============================================================================
