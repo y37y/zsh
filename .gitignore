@@ -1,3 +1,6 @@
+# OMC state (local machine, not config)
+.omc/
+
 # Personal/Private configurations
 .zshrc.local
 .zshrc.private

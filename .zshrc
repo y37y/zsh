@@ -511,3 +511,23 @@ skip_global_compinit=1
 for P in "$HOME/.local/bin" ; do
   case ":$PATH:" in *":$P:"*) ;; *) PATH="$P:$PATH" ;; esac
 done
+export PATH="$HOME/Projects/claude_1/claude_infra/bin:$PATH"
+
+# Vaultwarden bw CLI (self-signed cert)
+alias bw="NODE_TLS_REJECT_UNAUTHORIZED=0 bw"
+bwu() {
+    set +H
+    local sess
+    sess="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw unlock --raw)"
+    set -H
+    if [[ -z "$sess" ]]; then
+      echo "unlock failed"
+      return 1
+    fi
+    export BW_SESSION="$sess"
+    # Print the export line so you can paste into other terminals
+    echo "Vault unlocked. To use in another shell:"
+    echo "  export BW_SESSION=\"$sess\""
+}
+
+eval "$(clausona shell-init)"
