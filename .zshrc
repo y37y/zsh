@@ -1,6 +1,36 @@
 # ~/.zshrc - Fast zinit-powered config migrated from fish
 
 # ============================================================================
+# Agent vs interactive split (early-exit guard for AI agent panes)
+# ============================================================================
+# Agent panes (Claude Code, Codex, Gemini, Kimi, GLM, Minimax, omo, omx,
+# brenner, aider, etc.) don't need plugins/prompts/highlighting — those add
+# latency, pty escape pollution, and can race (autosuggest +
+# fast-syntax-highlight = double-render).
+# Detection: ntm pane title starts with ✳, or parent process is a known
+# agent CLI binary.
+__zshrc_is_agent_pane() {
+    if [[ -n "$TMUX" ]] && [[ "$(tmux display-message -p '#{pane_title}' 2>/dev/null)" == ✳* ]]; then
+        return 0
+    fi
+    case "$(ps -o comm= -p $PPID 2>/dev/null)" in
+        claude|codex|gemini|kimi|kimi-cli|opencode|omx|omo|brenner|aider) return 0 ;;
+    esac
+    return 1
+}
+if __zshrc_is_agent_pane; then
+    # Minimal env: PATH + critical tools, no chrome
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.bun/bin:$HOME/go/bin:/usr/local/bin:$PATH"
+    [[ -d "$HOME/Projects/claude_1/claude_infra/bin" ]] && export PATH="$HOME/Projects/claude_1/claude_infra/bin:$PATH"
+    [[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
+    export EDITOR=vi
+    export PAGER=cat
+    # Optional agent-only local overrides (PATH/env only — no plugins)
+    [[ -f "$HOME/.zshrc.local.agent" ]] && source "$HOME/.zshrc.local.agent"
+    return
+fi
+
+# ============================================================================
 # Basic zsh configuration
 # ============================================================================
 
@@ -530,4 +560,27 @@ bwu() {
     echo "  export BW_SESSION=\"$sess\""
 }
 
-eval "$(clausona shell-init)"
+# opencode CLI (multi-model wrapper for kimi/glm/minimax/etc.)
+[[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
+
+# claude-mem alias — resolves dynamically across plugin cache versions and
+# marketplace install layouts (path varies by plugin version).
+_cm_cached=$(ls -d "$HOME/.claude/plugins/cache/thedotmack/claude-mem"/*/scripts/worker-service.cjs 2>/dev/null | head -1)
+if [[ -n "$_cm_cached" ]]; then
+    alias claude-mem="bun '$_cm_cached'"
+elif [[ -f "$HOME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs" ]]; then
+    alias claude-mem='bun "$HOME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs"'
+fi
+unset _cm_cached
+
+# pro-workflow plugin: bypass git-blast-radius hook (allows reset --hard, etc.)
+export PRO_WORKFLOW_ALLOW_UNSAFE_GIT=1
+
+# mcp-agent-mail identity (auto-set if missing)
+if [ -z "$AGENT_NAME" ]; then
+    if [ -n "$TMUX_PANE" ]; then
+        export AGENT_NAME="$(hostname -s)-pane${TMUX_PANE//[^0-9]/}"
+    else
+        export AGENT_NAME="$(hostname -s)-shell"
+    fi
+fi
