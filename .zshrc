@@ -573,14 +573,21 @@ bwu() {
 [[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
 
 # claude-mem alias — resolves dynamically across plugin cache versions and
-# marketplace install layouts (path varies by plugin version).
-_cm_cached=$(ls -d "$HOME/.claude/plugins/cache/thedotmack/claude-mem"/*/scripts/worker-service.cjs 2>/dev/null | head -1)
-if [[ -n "$_cm_cached" ]]; then
-    alias claude-mem="bun '$_cm_cached'"
-elif [[ -f "$HOME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs" ]]; then
-    alias claude-mem='bun "$HOME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs"'
-fi
-unset _cm_cached
+# marketplace install layouts (worker-service.cjs moved under plugin/scripts/
+# in v12.x; plain scripts/ kept as legacy fallback). Use anonymous function
+# scoped null_glob so unmatched globs don't abort shell startup (zsh's default
+# nomatch behavior would otherwise fail the whole .zshrc).
+() {
+    setopt local_options null_glob
+    local -a candidates=(
+        $HOME/.claude/plugins/cache/thedotmack/claude-mem/*/plugin/scripts/worker-service.cjs
+        $HOME/.claude/plugins/cache/thedotmack/claude-mem/*/scripts/worker-service.cjs
+        $HOME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs
+    )
+    if (( ${#candidates} > 0 )); then
+        alias claude-mem="bun '${candidates[-1]}'"
+    fi
+}
 
 # pro-workflow plugin: bypass git-blast-radius hook (allows reset --hard, etc.)
 export PRO_WORKFLOW_ALLOW_UNSAFE_GIT=1
