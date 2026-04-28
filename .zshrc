@@ -579,14 +579,20 @@ bwu() {
 # nomatch behavior would otherwise fail the whole .zshrc).
 () {
     setopt local_options null_glob
-    local -a candidates=(
-        $HOME/.claude/plugins/cache/thedotmack/claude-mem/*/plugin/scripts/worker-service.cjs
-        $HOME/.claude/plugins/cache/thedotmack/claude-mem/*/scripts/worker-service.cjs
-        $HOME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs
-    )
-    if (( ${#candidates} > 0 )); then
-        alias claude-mem="bun '${candidates[-1]}'"
+    local cdir=$HOME/.claude/plugins/cache/thedotmack/claude-mem
+    local mp=$HOME/.claude/plugins/marketplaces/thedotmack/plugin/scripts/worker-service.cjs
+    local -a v_new=( $cdir/*/plugin/scripts/worker-service.cjs )
+    local -a v_old=( $cdir/*/scripts/worker-service.cjs )
+    local target=""
+    # prefer cache (highest version, last alphabetic) → legacy → marketplace
+    if (( ${#v_new} > 0 )); then
+        target="${v_new[-1]}"
+    elif (( ${#v_old} > 0 )); then
+        target="${v_old[-1]}"
+    elif [[ -f "$mp" ]]; then
+        target="$mp"
     fi
+    [[ -n "$target" ]] && alias claude-mem="bun '$target'"
 }
 
 # pro-workflow plugin: bypass git-blast-radius hook (allows reset --hard, etc.)
