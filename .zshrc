@@ -68,6 +68,15 @@ compinit
 bindkey -e  # Emacs style (Ctrl+A/E for line start/end) - RECOMMENDED
 # bindkey -vi  # Vim style (uncomment if you prefer vim keybindings)
 
+# Home/End — accept escape sequences sent by wezterm Cmd+Left/Right and
+# many other terminals. Without these, Cmd+Left prints raw `^[[H` chars.
+bindkey '^[[H' beginning-of-line   # Home
+bindkey '^[[F' end-of-line         # End
+bindkey '^[OH' beginning-of-line   # Home (application mode)
+bindkey '^[OF' end-of-line         # End (application mode)
+bindkey '^[[1~' beginning-of-line  # xterm legacy Home
+bindkey '^[[4~' end-of-line        # xterm legacy End
+
 # Atuin will handle history search if installed (direct init; no zinit race)
 if command -v atuin >/dev/null; then
   eval "$(atuin init zsh)"
