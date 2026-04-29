@@ -560,16 +560,31 @@ bwu() {
       echo "bwu: bw CLI not found on PATH (try: brew install bitwarden-cli)" >&2
       return 1
     fi
+    local server status
+    server="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw config server 2>/dev/null | tr -d '[:space:]')"
+    status="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)"
+    if [[ -z "$server" || "$server" == "https://bitwarden.com" ]]; then
+      echo "bwu: server not configured for self-hosted Vaultwarden." >&2
+      echo "  run: NODE_TLS_REJECT_UNAUTHORIZED=0 bw config server https://vault.k3s.lan" >&2
+      return 1
+    fi
+    case "$status" in
+      unauthenticated)
+        echo "bwu: not logged in. run: NODE_TLS_REJECT_UNAUTHORIZED=0 bw login <email>" >&2
+        return 1 ;;
+      "")
+        echo "bwu: bw status returned no value (server unreachable?)" >&2
+        return 1 ;;
+    esac
     set +H
     local sess
     sess="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw unlock --raw)"
     set -H
     if [[ -z "$sess" ]]; then
-      echo "unlock failed"
+      echo "bwu: unlock failed (wrong master password?)" >&2
       return 1
     fi
     export BW_SESSION="$sess"
-    # Print the export line so you can paste into other terminals
     echo "Vault unlocked. To use in another shell:"
     echo "  export BW_SESSION=\"$sess\""
 }
