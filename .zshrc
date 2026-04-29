@@ -565,7 +565,7 @@ bwu() {
     status="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)"
     if [[ -z "$server" || "$server" == "https://bitwarden.com" ]]; then
       echo "bwu: server not configured for self-hosted Vaultwarden." >&2
-      echo "  run: NODE_TLS_REJECT_UNAUTHORIZED=0 bw config server https://vault.k3s.lan" >&2
+      echo "  run: bw config server https://vault.f32.top" >&2
       return 1
     fi
     case "$status" in
