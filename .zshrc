@@ -555,6 +555,11 @@ export PATH="$HOME/Projects/claude_1/claude_infra/bin:$PATH"
 # Vaultwarden bw CLI (self-signed cert)
 alias bw="NODE_TLS_REJECT_UNAUTHORIZED=0 bw"
 bwu() {
+    rehash 2>/dev/null
+    if ! command -v bw >/dev/null 2>&1; then
+      echo "bwu: bw CLI not found on PATH (try: brew install bitwarden-cli)" >&2
+      return 1
+    fi
     set +H
     local sess
     sess="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw unlock --raw)"
