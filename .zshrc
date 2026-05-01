@@ -560,15 +560,16 @@ bwu() {
       echo "bwu: bw CLI not found on PATH (try: brew install bitwarden-cli)" >&2
       return 1
     fi
-    local server status
+    # NB: $status is read-only in zsh (= $?). Use bw_status instead.
+    local server bw_status
     server="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw config server 2>/dev/null | tr -d '[:space:]')"
-    status="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)"
+    bw_status="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)"
     if [[ -z "$server" || "$server" == "https://bitwarden.com" ]]; then
       echo "bwu: server not configured for self-hosted Vaultwarden." >&2
       echo "  run: bw config server https://vault.f32.top" >&2
       return 1
     fi
-    case "$status" in
+    case "$bw_status" in
       unauthenticated)
         echo "bwu: not logged in. run: NODE_TLS_REJECT_UNAUTHORIZED=0 bw login <email>" >&2
         return 1 ;;
