@@ -191,6 +191,31 @@ if command -v fnm >/dev/null 2>&1; then
   eval "$(fnm env --use-on-cd)"
 fi
 
+# direnv auto-trust by git remote owner.
+# Owners come from $DIRENV_TRUSTED_OWNERS (set in ~/.zshrc.local).
+# When entering a dir with .envrc whose `git remote get-url origin` matches a
+# trusted owner, run `direnv allow` automatically. Unknown owners still prompt.
+_direnv_auto_trust() {
+  command -v direnv >/dev/null || return
+  [[ -f .envrc ]] || return
+  [[ -z "$DIRENV_TRUSTED_OWNERS" ]] && return
+  local remote owner trusted
+  remote=$(git remote get-url origin 2>/dev/null) || return
+  owner=${remote##*[:/]}; owner=${owner%%/*}
+  for trusted in ${=DIRENV_TRUSTED_OWNERS}; do
+    if [[ "$owner" == "$trusted" ]]; then
+      direnv allow . &>/dev/null
+      # direnv prepends its own chpwd hook, so it ran before this function
+      # and saw the .envrc as blocked. Re-invoke it now that we've allowed.
+      typeset -f _direnv_hook >/dev/null && _direnv_hook
+      return
+    fi
+  done
+}
+autoload -U add-zsh-hook
+add-zsh-hook chpwd _direnv_auto_trust
+_direnv_auto_trust  # fire on shell start in case we open in a project dir
+
 # ============================================================================
 # SSH Agent Setup - Generic and Secure
 # ============================================================================
