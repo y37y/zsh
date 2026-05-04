@@ -632,7 +632,13 @@ if [ -z "$AGENT_NAME" ]; then
     fi
 fi
 alias da="direnv allow"
-alias mc="ssh mini pbcopy"
-alias mp="ssh mini pbpaste"
-
 alias mo="mosh"
+
+# Mac clipboard from any host. On Linux hosts these proxy through ssh to mini.
+# Pair with tmux MouseDragEnd1Pane -> ssh mini pbcopy for auto drag-copy.
+# Renamed from mc/mp because MinIO Client `mc` is on PATH on most Linux hosts
+# (e.g. is1) and wins precedence.
+if [ "$(uname)" != Darwin ]; then
+    alias pbc="ssh mini pbcopy"
+    alias pbp="ssh mini pbpaste"
+fi
