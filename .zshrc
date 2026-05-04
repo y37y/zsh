@@ -563,7 +563,7 @@ bwu() {
     # NB: $status is read-only in zsh (= $?). Use bw_status instead.
     local server bw_status
     server="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw config server 2>/dev/null | tr -d '[:space:]')"
-    bw_status="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)"
+    bw_bw_status="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)"
     if [[ -z "$server" || "$server" == "https://bitwarden.com" ]]; then
       echo "bwu: server not configured for self-hosted Vaultwarden." >&2
       echo "  run: bw config server https://vault.f32.top" >&2
