@@ -20,7 +20,7 @@ __zshrc_is_agent_pane() {
 }
 if __zshrc_is_agent_pane; then
     # Minimal env: PATH + critical tools, no chrome
-    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.bun/bin:$HOME/go/bin:/usr/local/bin:$PATH"
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.cache/.bun/bin:$HOME/.bun/bin:$HOME/go/bin:/usr/local/bin:$PATH"
     [[ -d "$HOME/Projects/claude_1/claude_infra/bin" ]] && export PATH="$HOME/Projects/claude_1/claude_infra/bin:$PATH"
     [[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
     export EDITOR=vi
@@ -552,6 +552,10 @@ for P in "$HOME/.local/bin" ; do
 done
 export PATH="$HOME/Projects/claude_1/claude_infra/bin:$PATH"
 
+# Homebrew curl/openssl uses its own CA bundle; point to system bundle which
+# includes our k3s-cluster internal CA (installed via update-ca-certificates).
+export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
 # Vaultwarden bw CLI (self-signed cert)
 alias bw="NODE_TLS_REJECT_UNAUTHORIZED=0 bw"
 bwu() {
@@ -627,3 +631,8 @@ if [ -z "$AGENT_NAME" ]; then
         export AGENT_NAME="$(hostname -s)-shell"
     fi
 fi
+alias da="direnv allow"
+alias mc="ssh mini pbcopy"
+alias mp="ssh mini pbpaste"
+
+alias mo="mosh"
