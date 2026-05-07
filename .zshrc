@@ -577,9 +577,14 @@ for P in "$HOME/.local/bin" ; do
 done
 export PATH="$HOME/Projects/claude_1/claude_infra/bin:$PATH"
 
-# Homebrew curl/openssl uses its own CA bundle; point to system bundle which
-# includes our k3s-cluster internal CA (installed via update-ca-certificates).
-export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+# CA bundle:
+# - Linux: /etc/ssl/certs/ca-certificates.crt (k3s internal CA via update-ca-certificates)
+# - macOS: leave SSL_CERT_FILE unset. reqwest/native-tls uses Keychain
+#          (k3s CA trusted via bin/bootstrap-mac). Pointing at a non-existent
+#          path makes reqwest panic (atuin / others).
+if [[ "$(uname -s)" == "Linux" && -f /etc/ssl/certs/ca-certificates.crt ]]; then
+  export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+fi
 
 # Vaultwarden bw CLI (self-signed cert)
 alias bw="NODE_TLS_REJECT_UNAUTHORIZED=0 bw"
