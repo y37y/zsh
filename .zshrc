@@ -20,7 +20,7 @@ __zshrc_is_agent_pane() {
 }
 if __zshrc_is_agent_pane; then
     # Minimal env: PATH + critical tools, no chrome
-    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.cache/.bun/bin:$HOME/.bun/bin:$HOME/go/bin:/usr/local/bin:$PATH"
+    export PATH="$HOME/.local/bin:$HOME/.local/share/npm/bin:$HOME/.cargo/bin:$HOME/.cache/.bun/bin:$HOME/.bun/bin:$HOME/go/bin:/usr/local/bin:$PATH"
     [[ -d "$HOME/Projects/claude_1/claude_infra/bin" ]] && export PATH="$HOME/Projects/claude_1/claude_infra/bin:$PATH"
     [[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
     export EDITOR=vi
@@ -55,7 +55,7 @@ export GOPATH="${GOPATH:-$HOME/go}"
 export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
 
 # Common local bins first so `command -v` works during init
-for P in "$HOME/.atuin/bin" "$HOME/.local/bin" "$CARGO_HOME/bin" "$PNPM_HOME" "$GOPATH/bin" "/usr/local/go/bin"; do
+for P in "$HOME/.atuin/bin" "$HOME/.local/bin" "$HOME/.local/share/npm/bin" "$CARGO_HOME/bin" "$PNPM_HOME" "$GOPATH/bin" "/usr/local/go/bin"; do
   case ":$PATH:" in *":$P:"*) ;; *) PATH="$P:$PATH" ;; esac
 done
 export PATH
@@ -668,7 +668,10 @@ alias mo="mosh"
 # Pair with tmux MouseDragEnd1Pane -> ssh mini pbcopy for auto drag-copy.
 # Renamed from mc/mp because MinIO Client `mc` is on PATH on most Linux hosts
 # (e.g. is1) and wins precedence.
-if [ "$(uname)" != Darwin ]; then
+if [ "$(uname)" = Darwin ]; then
+    alias pbc=pbcopy
+    alias pbp=pbpaste
+else
     alias pbc="ssh mini pbcopy"
     alias pbp="ssh mini pbpaste"
 fi
@@ -679,3 +682,6 @@ fi
 if [ "$(uname)" != Darwin ] && command -v keychain >/dev/null 2>&1; then
     eval "$(keychain --quiet --eval --agents ssh 2>/dev/null)"
 fi
+
+# opencode
+export PATH=/Users/lk/.opencode/bin:$PATH
