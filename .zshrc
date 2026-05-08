@@ -584,6 +584,10 @@ export PATH="$HOME/Projects/claude_1/claude_infra/bin:$PATH"
 #          path makes reqwest panic (atuin / others).
 if [[ "$(uname -s)" == "Linux" && -f /etc/ssl/certs/ca-certificates.crt ]]; then
   export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+elif [[ "$(uname -s)" == "Darwin" ]]; then
+  # Defensive unset for envs inherited from long-running parents (cmux/tmux/launchd)
+  # that may have been spawned before this OS guard landed.
+  unset SSL_CERT_FILE CURL_CA_BUNDLE NODE_EXTRA_CA_CERTS REQUESTS_CA_BUNDLE
 fi
 
 # Vaultwarden bw CLI (self-signed cert)
