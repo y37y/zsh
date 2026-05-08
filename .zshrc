@@ -679,7 +679,6 @@ else
     alias pbc="ssh mini pbcopy"
     alias pbp="ssh mini pbpaste"
 fi
-
 # Auto-resume ssh-agent via keychain (Linux operator hosts: trp, tuf, is1).
 # Persists ssh-agent socket across shell logouts so loaded keys survive.
 # Run `ssh-add ~/.ssh/<key>` once per host reboot; future shells reuse it.
@@ -688,4 +687,4 @@ if [ "$(uname)" != Darwin ] && command -v keychain >/dev/null 2>&1; then
 fi
 
 # opencode
-export PATH=/Users/lk/.opencode/bin:$PATH
+export PATH="$HOME/.opencode/bin:$PATH"
