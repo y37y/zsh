@@ -590,42 +590,63 @@ elif [[ "$(uname -s)" == "Darwin" ]]; then
   unset SSL_CERT_FILE CURL_CA_BUNDLE NODE_EXTRA_CA_CERTS REQUESTS_CA_BUNDLE
 fi
 
-# Vaultwarden bw CLI (self-signed cert)
-alias bw="NODE_TLS_REJECT_UNAUTHORIZED=0 bw"
+# Vaultwarden CLIs. vault.f32.top has a real LE cert, no TLS bypass needed.
+# - `rbw` for fast reads (Rust, agent-cached unlock, ~50ms per get).
+# - `bw`  for advanced ops rbw can't do: attachments, sends, item creation
+#         with custom fields. Run `bw login && bw unlock` directly when needed.
+#
+# bwu unlocks rbw's persistent agent. Once unlocked, rbw get/list/etc are
+# instant from any shell on this host until lock_timeout expires.
 bwu() {
     rehash 2>/dev/null
-    if ! command -v bw >/dev/null 2>&1; then
-      echo "bwu: bw CLI not found on PATH (try: brew install bitwarden-cli)" >&2
+    if ! command -v rbw >/dev/null 2>&1; then
+      echo "bwu: rbw not installed (try: brew install rbw  or  cargo install rbw --locked)" >&2
+      echo "  on first use also run:" >&2
+      echo "    rbw config set base_url https://vault.f32.top" >&2
+      echo "    rbw config set email <your-email>" >&2
+      echo "    rbw login" >&2
       return 1
     fi
-    # NB: $status is read-only in zsh (= $?). Use bw_status instead.
-    local server bw_status
-    server="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw config server 2>/dev/null | tr -d '[:space:]')"
-    bw_status="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw status 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4)"
-    if [[ -z "$server" || "$server" == "https://bitwarden.com" ]]; then
-      echo "bwu: server not configured for self-hosted Vaultwarden." >&2
-      echo "  run: bw config server https://vault.f32.top" >&2
+    rbw unlock || return 1
+}
+
+# vk <item> [<field>=api_key]   — pull a custom field from a Vaultwarden item
+# and copy to clipboard via pbc. Default field is api_key.
+# Examples:
+#   vk claude_crypto/binance                # api_key
+#   vk claude_crypto/kraken api_secret
+#   vk claude_crypto/okx    passphrase
+#   vk claude_crypto/hetzner-api api_token
+vk() {
+    local item="${1:?usage: vk <item> [<field>=api_key]}"
+    local field="${2:-api_key}"
+    if ! command -v rbw >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+      echo "vk: needs rbw + jq" >&2; return 1
+    fi
+    local val
+    val="$(rbw get --raw "$item" 2>/dev/null \
+        | jq -r --arg f "$field" '.fields[]? | select(.name==$f) | .value // empty')"
+    if [[ -z "$val" ]]; then
+      # Fallback: rbw stores password as the primary field, not in .fields[]
+      val="$(rbw get "$item" 2>/dev/null)"
+    fi
+    if [[ -z "$val" ]]; then
+      echo "vk: no value for field '$field' on item '$item'" >&2
       return 1
     fi
-    case "$bw_status" in
-      unauthenticated)
-        echo "bwu: not logged in. run: NODE_TLS_REJECT_UNAUTHORIZED=0 bw login <email>" >&2
-        return 1 ;;
-      "")
-        echo "bwu: bw status returned no value (server unreachable?)" >&2
-        return 1 ;;
-    esac
-    set +H
-    local sess
-    sess="$(NODE_TLS_REJECT_UNAUTHORIZED=0 bw unlock --raw)"
-    set -H
-    if [[ -z "$sess" ]]; then
-      echo "bwu: unlock failed (wrong master password?)" >&2
+    if (( $+aliases[pbc] )) || command -v pbc >/dev/null 2>&1; then
+      printf %s "$val" | pbc
+    elif command -v wl-copy >/dev/null 2>&1; then
+      printf %s "$val" | wl-copy
+    elif command -v xclip >/dev/null 2>&1; then
+      printf %s "$val" | xclip -selection clipboard
+    elif command -v pbcopy >/dev/null 2>&1; then
+      printf %s "$val" | pbcopy
+    else
+      echo "vk: no clipboard tool found (need pbc/wl-copy/xclip/pbcopy)" >&2
       return 1
     fi
-    export BW_SESSION="$sess"
-    echo "Vault unlocked. To use in another shell:"
-    echo "  export BW_SESSION=\"$sess\""
+    echo "vk: copied $field of $item ($(printf %s "$val" | wc -c) bytes)"
 }
 
 # opencode CLI (multi-model wrapper for kimi/glm/minimax/etc.)
