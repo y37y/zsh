@@ -699,8 +699,15 @@ alias mo="mosh"
 _clipboard_host() {
     if [ -n "${CLIPBOARD_HOST:-}" ]; then
         printf '%s' "$CLIPBOARD_HOST"
-    elif [ -n "${SSH_CLIENT:-}" ]; then
+        return
+    fi
+    if [ -n "${SSH_CLIENT:-}" ]; then
         local ip="${SSH_CLIENT%% *}"
+        if command -v tailscale >/dev/null 2>&1; then
+            local name
+            name=$(tailscale whois "$ip" 2>/dev/null | awk '/^  Name:/ {print $2; exit}' | cut -d. -f1)
+            [ -n "$name" ] && { printf '%s' "$name"; return; }
+        fi
         getent hosts "$ip" 2>/dev/null | awk '{print $2}' | cut -d. -f1 | head -1
     fi
 }
