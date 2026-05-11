@@ -262,26 +262,34 @@ install_zsh() {
 setup_config() {
     info "Setting up zsh configuration..."
     
-    # Backup existing config
-    if [[ -f ~/.zshrc ]]; then
+    # Resolve repo directory (absolute path of this script's location).
+    # We symlink so future `git pull` updates apply live without re-running.
+    local REPO_DIR
+    REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+    # Backup existing config (only if it's a real file, not already our symlink)
+    if [[ -f ~/.zshrc && ! -L ~/.zshrc ]]; then
         local backup_file="$HOME/.zshrc.backup.$(date +%Y%m%d_%H%M%S)"
         cp ~/.zshrc "$backup_file"
         info "Backed up existing .zshrc to $backup_file"
     fi
-    
-    # Copy new config
-    if [[ -f ".zshrc" ]]; then
-        cp .zshrc ~/.zshrc
-        success "Zsh configuration installed!"
+
+    # Symlink new config (so `git pull` propagates without re-install)
+    if [[ -f "$REPO_DIR/.zshrc" ]]; then
+        ln -sf "$REPO_DIR/.zshrc" ~/.zshrc
+        success "Zsh configuration symlinked from $REPO_DIR/.zshrc"
     else
-        error ".zshrc file not found in current directory"
+        error ".zshrc not found at $REPO_DIR/.zshrc"
     fi
-    
-    # Copy starship config if it exists
-    if [[ -f "starship.toml" ]]; then
+
+    # Symlink starship config if present
+    if [[ -f "$REPO_DIR/starship.toml" ]]; then
         mkdir -p ~/.config
-        cp starship.toml ~/.config/starship.toml
-        success "Starship configuration installed!"
+        if [[ -f ~/.config/starship.toml && ! -L ~/.config/starship.toml ]]; then
+            cp ~/.config/starship.toml "$HOME/.config/starship.toml.backup.$(date +%Y%m%d_%H%M%S)"
+        fi
+        ln -sf "$REPO_DIR/starship.toml" ~/.config/starship.toml
+        success "Starship configuration symlinked from $REPO_DIR/starship.toml"
     fi
 }
 
