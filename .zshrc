@@ -715,8 +715,11 @@ if [ "$(uname)" = Darwin ]; then
     alias pbc=pbcopy
     alias pbp=pbpaste
 else
-    pbc() { local h="$(_clipboard_host)"; [ -n "$h" ] && ssh "$h" pbcopy || cat >/dev/null; }
-    pbp() { local h="$(_clipboard_host)"; [ -n "$h" ] && ssh "$h" pbpaste; }
+    # Use `function` keyword: zsh's `name()` syntax expands aliases at parse
+    # time, so on Darwin the parser would substitute `pbc=pbcopy` into `pbc()`
+    # → `pbcopy()` → parse error. `function name` skips alias expansion.
+    function pbc { local h="$(_clipboard_host)"; [ -n "$h" ] && ssh "$h" pbcopy || cat >/dev/null; }
+    function pbp { local h="$(_clipboard_host)"; [ -n "$h" ] && ssh "$h" pbpaste; }
 fi
 # Auto-resume ssh-agent via keychain (Linux operator hosts: trp, tuf, is1).
 # Persists ssh-agent socket across shell logouts so loaded keys survive.
