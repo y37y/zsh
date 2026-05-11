@@ -1,0 +1,13 @@
+# >>> y37y atuin managed block >>>
+# DO NOT EDIT inside this block. Source of truth:
+#   y37y/zsh/atuin/config-fragment.toml
+# To refresh: re-run install.sh (or bin/ensure-atuin-config.sh).
+
+# Drop ntm (yet-another-tmux) spawn commands from atuin history.
+# These carry inline CLAUDE_CODE_HOOKS JSON + systemd-run wrappers; without
+# filtering they pollute fuzzy ↑-search with multi-kilobyte lines that match
+# any substring (e.g. typing `claude --danger` surfaces the full spawn).
+history_filter = [
+  "NTM_SPAWN_BATCH_ID",
+]
+# <<< y37y atuin managed block <<<

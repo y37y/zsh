@@ -293,6 +293,52 @@ setup_config() {
     fi
 }
 
+# Maintain a managed block inside ~/.config/atuin/config.toml. Idempotent:
+# strips any existing y37y block, then appends the current fragment. Users can
+# keep their own settings outside the markers; the block round-trips cleanly.
+setup_atuin_config() {
+    if ! check_command atuin; then
+        info "Atuin not installed; skipping atuin config patch."
+        return 0
+    fi
+
+    local REPO_DIR
+    REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local fragment="$REPO_DIR/atuin/config-fragment.toml"
+    local target="$HOME/.config/atuin/config.toml"
+    local marker_start="# >>> y37y atuin managed block >>>"
+    local marker_end="# <<< y37y atuin managed block <<<"
+
+    if [[ ! -f "$fragment" ]]; then
+        warning "Atuin fragment missing at $fragment; skipping."
+        return 1
+    fi
+
+    mkdir -p "$HOME/.config/atuin"
+
+    if [[ -f "$target" ]]; then
+        # Strip any prior managed block (by marker lines) before appending fresh.
+        local tmp; tmp="$(mktemp)"
+        awk -v s="$marker_start" -v e="$marker_end" '
+            BEGIN { skip = 0 }
+            index($0, s) == 1 { skip = 1; next }
+            index($0, e) == 1 { skip = 0; next }
+            !skip { print }
+        ' "$target" > "$tmp"
+        mv "$tmp" "$target"
+    else
+        : > "$target"
+    fi
+
+    # Ensure trailing newline before appending fragment.
+    if [[ -s "$target" && "$(tail -c1 "$target" | od -An -c | tr -d ' ')" != "\n" ]]; then
+        printf '\n' >> "$target"
+    fi
+    cat "$fragment" >> "$target"
+    success "Atuin managed block refreshed in $target"
+    info "To drop pre-existing noise: atuin search --delete \"NTM_SPAWN_BATCH_ID\""
+}
+
 # Set zsh as default shell
 setup_shell() {
     local zsh_path
@@ -360,6 +406,7 @@ main() {
     install_optional_tools
     install_zinit
     setup_config
+    setup_atuin_config
     post_install
     setup_shell
     
