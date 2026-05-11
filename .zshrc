@@ -730,3 +730,6 @@ fi
 
 # opencode
 export PATH="$HOME/.opencode/bin:$PATH"
+
+# Disable OmX co-author enforcement (per fleet policy: no AI attribution in commits).
+export OMX_LORE_COMMIT_GUARD=0
