@@ -689,16 +689,27 @@ fi
 alias da="direnv allow"
 alias mo="mosh"
 
-# Mac clipboard from any host. On Linux hosts these proxy through ssh to mini.
-# Pair with tmux MouseDragEnd1Pane -> ssh mini pbcopy for auto drag-copy.
-# Renamed from mc/mp because MinIO Client `mc` is on PATH on most Linux hosts
-# (e.g. is1) and wins precedence.
+# Mac clipboard from any host. On non-Mac hosts, ship via SSH to a clipboard
+# host. Resolution order:
+#   1. $CLIPBOARD_HOST env (set in your ~/.zshrc.local for hardcoded pref)
+#   2. Auto-detect from $SSH_CLIENT IP via local hostname resolution
+#   3. No-op (graceful) if nothing resolves — `pbc` becomes /dev/null sink,
+#      `pbp` returns empty
+# Renamed from mc/mp because MinIO Client `mc` collides on Linux PATH.
+_clipboard_host() {
+    if [ -n "${CLIPBOARD_HOST:-}" ]; then
+        printf '%s' "$CLIPBOARD_HOST"
+    elif [ -n "${SSH_CLIENT:-}" ]; then
+        local ip="${SSH_CLIENT%% *}"
+        getent hosts "$ip" 2>/dev/null | awk '{print $2}' | cut -d. -f1 | head -1
+    fi
+}
 if [ "$(uname)" = Darwin ]; then
     alias pbc=pbcopy
     alias pbp=pbpaste
 else
-    alias pbc="ssh mini pbcopy"
-    alias pbp="ssh mini pbpaste"
+    pbc() { local h="$(_clipboard_host)"; [ -n "$h" ] && ssh "$h" pbcopy || cat >/dev/null; }
+    pbp() { local h="$(_clipboard_host)"; [ -n "$h" ] && ssh "$h" pbpaste; }
 fi
 # Auto-resume ssh-agent via keychain (Linux operator hosts: trp, tuf, is1).
 # Persists ssh-agent socket across shell logouts so loaded keys survive.
